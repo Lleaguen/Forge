@@ -3,9 +3,7 @@
 Forge es una plataforma web multi-tenant para la gestión de proyectos y tareas,
 diseñada como un monolito modular con arquitectura hexagonal pragmática.
 
-El objetivo del proyecto es demostrar seniority en desarrollo full-stack,
-priorizando claridad arquitectónica, escalabilidad, separación de responsabilidades
-y buenas prácticas de seguridad y autenticación.
+
 
 ## 🎯 Objetivos técnicos
 
