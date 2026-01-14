@@ -8,9 +8,22 @@ import { PrismaService } from '@/shared/database/prisma.service';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
 import { LoginUseCase } from '../../application/use-cases/login.use-case';
 
-import { PrismaUserRepository } from '../../infrastructure/repositories/prisma-user.repository';
+// Ports (tokens)
+import {
+  USER_REPOSITORY,
+  PASSWORD_HASHER,
+  TOKEN_GENERATOR,
+} from '../../application/ports';
+
+// Adapters
+import { PrismaUserRepository } from '../../infrastructure/persistence/prisma-user.repository';
 import { BcryptPasswordHasher } from '../../infrastructure/security/bcrypt-password-hasher';
-import { JwtTokenGenerator } from '../../infrastructure/tokens/jwt-token-generator';
+import { JwtTokenGenerator } from '../../infrastructure/security/jwt-token-generator';
+
+// Interfaces
+import { UserRepository } from '../../domain/repositories/user.repository';
+import { PasswordHasherPort } from '../../application/ports/password-hasher.port';
+import { TokenGeneratorPort } from '../../application/ports/token-generator.port';
 
 @Module({
   imports: [JwtModule.register({ secret: 'super-secret' })],
@@ -18,32 +31,37 @@ import { JwtTokenGenerator } from '../../infrastructure/tokens/jwt-token-generat
   providers: [
     PrismaService,
 
-    // Adapters
-    PrismaUserRepository,
-    BcryptPasswordHasher,
-    JwtTokenGenerator,
+    // Ports → Adapters
+    {
+      provide: USER_REPOSITORY,
+      useClass: PrismaUserRepository,
+    },
+    {
+      provide: PASSWORD_HASHER,
+      useClass: BcryptPasswordHasher,
+    },
+    {
+      provide: TOKEN_GENERATOR,
+      useClass: JwtTokenGenerator,
+    },
 
     // Use Cases
     {
       provide: RegisterUserUseCase,
       useFactory: (
-        repo: PrismaUserRepository,
-        hasher: BcryptPasswordHasher,
+        repo: UserRepository,
+        hasher: PasswordHasherPort,
       ) => new RegisterUserUseCase(repo, hasher),
-      inject: [PrismaUserRepository, BcryptPasswordHasher],
+      inject: [USER_REPOSITORY, PASSWORD_HASHER],
     },
     {
       provide: LoginUseCase,
       useFactory: (
-        repo: PrismaUserRepository,
-        hasher: BcryptPasswordHasher,
-        tokenGen: JwtTokenGenerator,
+        repo: UserRepository,
+        hasher: PasswordHasherPort,
+        tokenGen: TokenGeneratorPort,
       ) => new LoginUseCase(repo, hasher, tokenGen),
-      inject: [
-        PrismaUserRepository,
-        BcryptPasswordHasher,
-        JwtTokenGenerator,
-      ],
+      inject: [USER_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR],
     },
   ],
 })
