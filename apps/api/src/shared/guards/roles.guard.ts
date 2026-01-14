@@ -12,17 +12,28 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(ctx: ExecutionContext): boolean {
-    const required =
+    const requiredRoles =
       this.reflector.get<string[]>('roles', ctx.getHandler()) ?? [];
 
-    if (required.length === 0) return true;
+    if (requiredRoles.length === 0) {
+      return true;
+    }
 
     const req = ctx.switchToHttp().getRequest();
-    const auth: AuthContext = req.authContext;
+    const auth = req.authContext as AuthContext | undefined;
 
-    if (!required.some(r => auth.roles.includes(r))) {
-      throw new ForbiddenException();
+    if (!auth) {
+      throw new ForbiddenException('Missing auth context');
     }
+
+    const hasRole = requiredRoles.some(role =>
+      auth.roles.includes(role),
+    );
+
+    if (!hasRole) {
+      throw new ForbiddenException('Insufficient role');
+    }
+
     return true;
   }
 }

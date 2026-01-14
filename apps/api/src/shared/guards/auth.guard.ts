@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AuthContext } from '@/modules/auth/interfaces/auth-context.interface';
+import { AuthContext } from '../../modules/auth/interface/auth-context.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -23,8 +23,10 @@ export class AuthGuard implements CanActivate {
 
       const authContext: AuthContext = {
         userId: payload.sub,
+        email: payload.email,
         organizationId: payload.organizationId,
-        roles: payload.roles,
+        roles: payload.roles ?? [],
+        permissions: payload.permissions ?? [],
       };
 
       req.authContext = authContext;
