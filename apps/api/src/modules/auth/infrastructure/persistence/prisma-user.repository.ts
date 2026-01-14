@@ -1,8 +1,8 @@
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { User } from '../../domain/entities/user.entity';
 import { Email } from '../../domain/value-objects/email.vo';
-import { PrismaService } from '@/shared/database/prisma.service';
 import { UserId } from '../../domain/value-objects/user-id.vo';
+import { PrismaService } from '@/shared/database/prisma.service';
 
 export class PrismaUserRepository implements UserRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,7 +15,7 @@ export class PrismaUserRepository implements UserRepository {
     if (!record) return null;
 
     return User.create({
-      id: UserId.create(record.id),
+      id: UserId.fromString(record.id),
       email: Email.create(record.email),
       passwordHash: record.passwordHash,
       createdAt: record.createdAt,
@@ -23,8 +23,12 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async save(user: User): Promise<void> {
-    await this.prisma.user.create({
-      data: {
+    await this.prisma.user.upsert({
+      where: { id: user.getId().getValue() },
+      update: {
+        passwordHash: user.getPasswordHash(),
+      },
+      create: {
         id: user.getId().getValue(),
         email: user.getEmail().getValue(),
         passwordHash: user.getPasswordHash(),
