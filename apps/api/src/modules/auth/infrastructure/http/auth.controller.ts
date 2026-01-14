@@ -6,12 +6,15 @@ import { RegisterUserSchema } from '@/shared/zod/auth/register-user.schema';
 import { LoginSchema } from '@/shared/zod/auth/login.schema';
 import type { RegisterUserDto } from '@/modules/auth/application/dtos/register-user.dto';
 import type { LoginDto } from '@/modules/auth/application/dtos/login.dto';
+import { RefreshTokenSchema } from '@/shared/zod/auth/refresh-token.schema';
+import { RefreshTokenUseCase } from '@/modules/auth/application/use-cases/refresh-token.use-case';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly registerUser: RegisterUserUseCase,
     private readonly loginUser: LoginUseCase,
+    private readonly refreshTokenUseCase: RefreshTokenUseCase
   ) {}
 
   @Post('register')
@@ -24,5 +27,12 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(LoginSchema))
   login(@Body() body: LoginDto) {
     return this.loginUser.execute(body);
+  }
+  @Post('refresh')
+  refresh(
+    @Body(new ZodValidationPipe(RefreshTokenSchema))
+    body: { refreshToken: string },
+  ) {
+    return this.refreshTokenUseCase.execute(body);
   }
 }

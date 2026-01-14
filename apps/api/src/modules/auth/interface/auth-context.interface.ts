@@ -1,5 +1,7 @@
 export interface AuthContext {
   userId: string;
-  organizationId: string;
+  email: string;
+  organizationId?: string;
   roles: string[];
+  permissions: string[];
 }

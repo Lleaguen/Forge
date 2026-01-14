@@ -15,3 +15,26 @@ model User {
 
   @@map("users")
 }
+model Organization {
+  id   String @id
+  name String
+}
+
+model Membership {
+  id             String @id @default(uuid())
+  userId         String
+  organizationId String
+  role           String
+}
+
+model RefreshToken {
+  token      String   @id
+  userId     String
+  email      String
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

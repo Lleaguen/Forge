@@ -16,6 +16,15 @@ export class UserId {
     return new UserId(value ?? randomUUID());
   }
 
+  // 👇 ESTE ES EL QUE FALTABA
+  static fromString(value: string): UserId {
+    if (!value || value.trim().length === 0) {
+      throw new DomainError('UserId cannot be empty');
+    }
+
+    return new UserId(value);
+  }
+
   getValue(): string {
     return this.value;
   }
