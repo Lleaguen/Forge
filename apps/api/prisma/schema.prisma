@@ -13,11 +13,19 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 
+  memberships   Membership[]
+  refreshTokens RefreshToken[]
+
   @@map("users")
 }
+
 model Organization {
-  id   String @id
+  id   String @id @default(uuid())
   name String
+
+  memberships Membership[]
+
+  @@map("organizations")
 }
 
 model Membership {
@@ -25,16 +33,26 @@ model Membership {
   userId         String
   organizationId String
   role           String
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("memberships")
 }
 
 model RefreshToken {
   token      String   @id
   userId     String
   email      String
-  expiresAt DateTime
-  revokedAt DateTime?
+  expiresAt  DateTime
+  revokedAt  DateTime?
 
   createdAt DateTime @default(now())
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
+  @@map("refresh_tokens")
 }
