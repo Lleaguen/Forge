@@ -25,7 +25,6 @@ import {
   imports: [JwtModule.register({ secret: 'super-secret' })],
   controllers: [AuthController],
   providers: [
-    PrismaService,
 
     // Repositories
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
