@@ -1,16 +1,18 @@
 import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { organizationSchema, OrganizationSchema } from '../schemas/organization.schema'
+import { organizationSchema } from '../schema/organization.schema' 
 import { api } from '../../../shared/api/axios'
 import { useNavigate } from 'react-router-dom'
 
 export function OrganizationOnboardingPage() {
   const navigate = useNavigate()
-  const form = useForm<OrganizationSchema>({
+  
+  const form = useForm({
     resolver: zodResolver(organizationSchema)
   })
 
-  const onSubmit = async (data: OrganizationSchema) => {
+  const onSubmit = async (data: z.infer<typeof organizationSchema>) => {
     await api.post('/organizations', data)
     navigate('/dashboard')
   }

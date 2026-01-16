@@ -1,25 +1,32 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { loginSchema, LoginSchema } from '../schemas/auth.schema'
-import { api } from '../../../shared/api/axios'
-import { useNavigate } from 'react-router-dom'
+import { Button, Input, FormCard, FormField } from '../../../shared/components/ui/index'
+import { AuthHeader, AuthMain } from '../components/index'
+import { useLoginForm } from '../hooks/useLoginForm'
 
 export function LoginPage() {
-  const navigate = useNavigate()
-  const form = useForm<LoginSchema>({
-    resolver: zodResolver(loginSchema)
-  })
-
-  const onSubmit = async (data: LoginSchema) => {
-    await api.post('/auth/login', data)
-    navigate('/dashboard')
-  }
+  const { form, onSubmit } = useLoginForm()
+  const {
+    register,
+    formState: { errors, isSubmitting }
+  } = form
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <input {...form.register('email')} />
-      <input type="password" {...form.register('password')} />
-      <button type="submit">Login</button>
-    </form>
+  <div className="min-h-screen flex flex-col bg-white">
+   <AuthHeader action={<Button to="/register" >Create an account</Button>}/>
+   <AuthMain center={
+      <FormCard title="Welcome back" description="Sign in to your Forge workspace" form={form} footer="© 2024 Forge Web Inc. All rights reserved." onSubmit={onSubmit}>
+        <FormField label="Email Address" error={errors.email?.message}>
+          <Input type="email" placeholder="john.doe@forge.com" hasError={!!errors.email} {...register('email')}/>
+        </FormField>
+        <FormField label="Password" action={ <Button to="/#" variant="ghost">Forgot password?</Button> }
+          error={errors.password?.message}>
+          <Input type="password" placeholder="••••••••" hasError={!!errors.password} {...register('password')}/>
+        </FormField>
+      <Button type="submit" variant="primary" isLoading={isSubmitting}>
+        Sign in
+      </Button>
+    </FormCard>
+  }
+/>
+  </div>
   )
 }

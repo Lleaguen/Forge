@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { projectSchema, ProjectSchema } from '../schemas/project.schema'
+import { projectSchema, type ProjectSchema } from '../../projects/schema/project.schema';
 import { api } from '../../../shared/api/axios'
 import { useNavigate } from 'react-router-dom'
 

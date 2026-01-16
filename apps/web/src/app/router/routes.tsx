@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { LoginPage } from '../../features/auth/pages/LoginPage'
 import { RegisterPage } from '../../features/auth/pages/RegisterPage'
 import { DashboardHomePage } from '../../features/dashboard/pages/DashboardHomePage'
@@ -8,10 +8,22 @@ import { ProjectDetailPage } from '../../features/projects/pages/ProjectDetailPa
 import { ProjectTasksPage } from '../../features/tasks/pages/ProjectTasksPage'
 import { ProfilePage } from '../../features/profile/pages/ProfilePage'
 import { OrganizationOnboardingPage } from '../../features/onboarding/pages/OrganizationOnboardingPage'
-import { AuthGuard } from './guards'
+import { AuthGuard, GuestGuard } from './guards'
 
 export const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
+  { path: "/", 
+    element: (
+    <Navigate to="/login" replace /> 
+  )},
+
+  {
+  path: '/login',
+  element: (
+    <GuestGuard>
+      <LoginPage />
+    </GuestGuard>
+  )
+},
   { path: '/register', element: <RegisterPage /> },
   {
     path: '/onboarding/organization',
