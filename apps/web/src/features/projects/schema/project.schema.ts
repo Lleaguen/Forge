@@ -5,6 +5,7 @@ export const projectSchema = z.object({
 })
 
 export type ProjectSchema = z.infer<typeof projectSchema>
+
 export const projectUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   description: z.string().optional(),
