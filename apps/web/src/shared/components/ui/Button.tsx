@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes } from 'react'
 import { Link, type To } from 'react-router-dom'
 import { cn } from '../../utils/cn'
 
-type Variant = 'primary' | 'ghost'
+type Variant = 'primary' | 'ghost' | 'outline'
 
 type BaseProps = {
   variant?: Variant
@@ -31,7 +31,8 @@ export function Button(
     variant = 'primary',
     isLoading,
     className,
-    children
+    children,
+    ...rest
   } = props
 
   const baseClasses =
@@ -41,31 +42,37 @@ export function Button(
     primary:
       'h-12 w-full px-6 bg-[#2FA4A9] text-white hover:bg-[#4BCAD1]',
     ghost:
-      'h-10 px-5 text-[#2FA4A9] hover:text-[#4BCAD1] hover:underline'
+      'h-10 px-5 text-[#2FA4A9] hover:text-[#4BCAD1] hover:underline',
+    outline:
+      'h-12 w-full px-6 border border-[#2FA4A9] text-[#2FA4A9] hover:bg-[#2FA4A9] hover:text-white'
   }
 
   const classes = cn(baseClasses, variants[variant], className)
 
   /* ---------- LINK ---------- */
-  if ('to' in props) {
+  if ('to' in rest) {
+    const { to, ...linkProps } = rest
     return (
-      <Link to={props.to} className={classes}>
+      <Link to={to} className={classes} {...linkProps}>
         {children}
       </Link>
     )
   }
 
   /* ---------- BUTTON ---------- */
+  const { disabled, ...buttonProps } = rest
+
   return (
     <button
-      {...props}
-      disabled={isLoading || props.disabled}
+      {...buttonProps}
+      disabled={isLoading || disabled}
       className={classes}
     >
-      {isLoading && (
+      {isLoading ? (
         <span className="size-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+      ) : (
+        children
       )}
-      {children}
     </button>
   )
 }

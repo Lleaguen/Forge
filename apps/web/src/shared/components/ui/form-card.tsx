@@ -4,8 +4,8 @@ import { ReactNode } from 'react'
 type Props<T extends FieldValues> = {
   form: UseFormReturn<T>
   onSubmit: (data: T) => void
-  title?: string
-  description?: string
+  title?: ReactNode
+  description?: ReactNode
   footer?: ReactNode
   children: ReactNode
 }

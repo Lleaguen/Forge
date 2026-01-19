@@ -6,9 +6,7 @@ import { RefreshToken } from '../../domain/entities/refresh-token.entity';
 import { UserId } from '../../domain/value-objects/user-id.vo';
 
 @Injectable()
-export class PrismaRefreshTokenRepository
-  implements RefreshTokenRepository
-{
+export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async save(token: RefreshToken): Promise<void> {
@@ -42,7 +40,9 @@ export class PrismaRefreshTokenRepository
   async revoke(token: string): Promise<void> {
     await this.prisma.refreshToken.update({
       where: { token },
-      data: { revokedAt: new Date() },
+      data: {
+        revokedAt: new Date(),
+      },
     });
   }
 }

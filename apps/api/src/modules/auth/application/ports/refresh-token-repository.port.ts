@@ -4,4 +4,5 @@ export interface RefreshTokenRepository {
   save(token: RefreshToken): Promise<void>;
   find(token: string): Promise<RefreshToken | null>;
   revoke(token: string): Promise<void>;
+  revoke(token: string): Promise<void>;
 }

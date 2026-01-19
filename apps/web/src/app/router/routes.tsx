@@ -6,7 +6,7 @@ import { ProjectsListPage } from '../../features/projects/pages/ProjectsListPage
 import { NewProjectPage } from '../../features/projects/pages/NewProjectPage'
 import { ProjectDetailPage } from '../../features/projects/pages/ProjectDetailPage'
 import { ProjectTasksPage } from '../../features/tasks/pages/ProjectTasksPage'
-import { ProfilePage } from '../../features/profile/pages/ProfilePage'
+import { UserProfileSettings } from '../../features/profile/pages/ProfilePage'
 import { OrganizationOnboardingPage } from '../../features/onboarding/pages/OrganizationOnboardingPage'
 import { AuthGuard, GuestGuard } from './guards'
 
@@ -77,7 +77,7 @@ export const router = createBrowserRouter([
     path: '/dashboard/profile',
     element: (
       <AuthGuard>
-        <ProfilePage />
+        <UserProfileSettings />
       </AuthGuard>
     )
   }

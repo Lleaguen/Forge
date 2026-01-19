@@ -1,14 +1,14 @@
-import { ReactNode } from 'react'
+import { Children, ReactNode } from 'react'
 import { cn } from '../../../shared/utils/cn';
 
 
 type Props = {
-  center?: ReactNode
   bottom?: ReactNode
   className?: string
+  children?: ReactNode
 }
 
-export function AuthMain({ center, bottom, className }: Props) {
+export function AuthMain({ bottom, className, children}: Props) {
   return (
     <main
       className={cn(
@@ -18,9 +18,9 @@ export function AuthMain({ center, bottom, className }: Props) {
     >
       {/* Zona central */}
       <section className="flex justify-center w-full max-w-[420px]">
-        {center}
+        {children}
       </section>
-
+      
       {/* Zona inferior */}
       {bottom && (
         <section className="mt-8">

@@ -1,18 +1,23 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
 import { AuthController } from './auth.controller';
-import { PrismaService } from '@/shared/database/prisma.service';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from '../security/roles.guard';
 
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
 import { LoginUseCase } from '../../application/use-cases/login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
+import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 
 import { PrismaUserRepository } from '../persistence/prisma-user.repository';
 import { PrismaRefreshTokenRepository } from '../persistence/prisma-refresh-token.repository';
 
 import { BcryptPasswordHasher } from '../security/bcrypt-password-hasher';
 import { JwtTokenGenerator } from '../security/jwt-token-generator';
+
+import { JwtStrategy } from '../security/jwt.strategy';
+import { RefreshTokenStrategy } from '../security/refresh-token.strategy';
 
 import {
   USER_REPOSITORY,
@@ -25,7 +30,12 @@ import {
   imports: [JwtModule.register({ secret: 'super-secret' })],
   controllers: [AuthController],
   providers: [
-
+    JwtStrategy,
+    RefreshTokenStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
     // Repositories
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
     {
@@ -35,13 +45,18 @@ import {
 
     // Services
     { provide: PASSWORD_HASHER, useClass: BcryptPasswordHasher },
-    { provide: TOKEN_GENERATOR, useClass: JwtTokenGenerator },
+    {
+      provide: TOKEN_GENERATOR,
+      useFactory: (jwtService: JwtService) => {
+        return new JwtTokenGenerator(jwtService);
+      },
+      inject: [JwtService],
+    },
 
     // Use cases
     {
       provide: RegisterUserUseCase,
-      useFactory: (repo, hasher) =>
-        new RegisterUserUseCase(repo, hasher),
+      useFactory: (repo, hasher) => new RegisterUserUseCase(repo, hasher),
       inject: [USER_REPOSITORY, PASSWORD_HASHER],
     },
     {
@@ -52,9 +67,13 @@ import {
     },
     {
       provide: RefreshTokenUseCase,
-      useFactory: (repo, tokenGen) =>
-        new RefreshTokenUseCase(repo, tokenGen),
+      useFactory: (repo, tokenGen) => new RefreshTokenUseCase(repo, tokenGen),
       inject: [REFRESH_TOKEN_REPOSITORY, TOKEN_GENERATOR],
+    },
+    {
+      provide: LogoutUseCase,
+      useFactory: (repo) => new LogoutUseCase(repo),
+      inject: [REFRESH_TOKEN_REPOSITORY],
     },
   ],
 })

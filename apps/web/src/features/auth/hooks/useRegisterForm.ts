@@ -3,12 +3,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import type { z } from 'zod'
 import { api } from '../../../shared/api/axios'
+import { useMutation } from '@tanstack/react-query'
 import { RegisterSchema } from '../schemas/auth.schema'
 
 export type RegisterFormValues = z.infer<typeof RegisterSchema>
 
 export function useRegisterForm() {
   const navigate = useNavigate()
+  const mutation = useMutation({
+    mutationFn: registerFormValues => api.post('/auth/register', registerFormValues)
+  })
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(RegisterSchema)
@@ -21,6 +25,7 @@ export function useRegisterForm() {
 
   return {
     form,
-    onSubmit
+    onSubmit,
+    isLoading: mutation.isPending
   }
 }

@@ -14,5 +14,8 @@ RUN npx prisma generate
 COPY . .
 RUN npm run build
 
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+CMD wget -qO- http://localhost:3000/health || exit 1
+
 EXPOSE 3000
 CMD ["npm", "run", "start:prod"]

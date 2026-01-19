@@ -1,27 +1,31 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
-import type { z } from 'zod'
-
 import { LoginSchema } from '../schemas/auth.schema'
-import { api } from '../../../shared/api/axios'
+import type { z } from 'zod'
+import { useLogin } from './useLogin'
+import { useNavigate } from 'react-router-dom'
 
-export type LoginFormValues = z.infer<typeof LoginSchema>
+type LoginForm = z.infer<typeof LoginSchema>
 
 export function useLoginForm() {
   const navigate = useNavigate()
+  const loginMutation = useLogin()
 
-  const form = useForm<LoginFormValues>({
+  const form = useForm<LoginForm>({
     resolver: zodResolver(LoginSchema)
   })
 
-  const onSubmit = async (data: LoginFormValues) => {
-    await api.post('/auth/login', data)
+  const onSubmit = async (data: LoginForm) => {
+    const result = await loginMutation.mutateAsync(data)
+    localStorage.setItem('accessToken', result.accessToken)
+    localStorage.setItem('refreshToken', result.refreshToken)
+
     navigate('/dashboard')
   }
 
   return {
     form,
-    onSubmit
+    onSubmit,
+    isLoading: loginMutation.isPending
   }
 }
