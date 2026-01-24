@@ -1,0 +1,47 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+*{
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  transition:
+    background-color 250ms ease,
+    color 200ms ease;
+}
+
+* {
+  transition:
+    background-color 500ms ease-in-out,
+    border-color 200ms ease,
+    color 200ms ease,
+    fill 200ms ease,
+    stroke 200ms ease;
+}
+
+@layer base {
+  body {
+   
+    @apply bg-[#F8FAFC] text-slate-700;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .input-standard {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm 
+           outline-none transition-all focus:border-[#2FA4A9] focus:ring-2 focus:ring-[#2FA4A9]/10;
+  }
+
+  .card-container {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+}

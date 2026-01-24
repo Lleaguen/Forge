@@ -27,6 +27,9 @@ services:
       - "5555:5555"
     env_file:
       - .env
+    environment:
+      # ESTO ES LO CLAVE: Sobreescribe el host solo para el contenedor
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/forge?schema=public
     depends_on:
       db:
         condition: service_healthy
