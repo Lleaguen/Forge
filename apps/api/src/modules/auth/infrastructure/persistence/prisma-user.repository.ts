@@ -20,6 +20,9 @@ export class PrismaUserRepository implements UserRepository {
       id: UserId.fromString(record.id),
       email: Email.create(record.email),
       passwordHash: record.passwordHash,
+      fullName: record.fullName || undefined,
+      role: record.role as 'ADMIN' | 'MEMBER',
+      avatarUrl: record.avatarUrl || undefined,
       createdAt: record.createdAt,
     });
   }
@@ -29,11 +32,16 @@ export class PrismaUserRepository implements UserRepository {
       where: { id: user.getId().getValue() },
       update: {
         passwordHash: user.getPasswordHash(),
+        fullName: user.getFullName(),
+        avatarUrl: user.getAvatarUrl(),
       },
       create: {
         id: user.getId().getValue(),
         email: user.getEmail().getValue(),
         passwordHash: user.getPasswordHash(),
+        fullName: user.getFullName(),
+        avatarUrl: user.getAvatarUrl(),
+        role: user.getRole(),
         createdAt: user.getCreatedAt(),
       },
     });

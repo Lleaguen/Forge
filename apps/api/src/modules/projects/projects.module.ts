@@ -1,32 +1,14 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { ProjectsController } from './infrastructure/http/projects.controller';
-import { CreateProjectUseCase } from './application/use-cases/create-project.use-case';
-import { GetProjectsByOrganizationUseCase } from './application/use-cases/get-projects-by-organization.use-case';
-import { UpdateProjectUseCase } from './application/use-cases/update-project.use-case';
-import { DeleteProjectUseCase } from './application/use-cases/delete-project.use-case';
-import { PrismaProjectRepository } from './infrastructure/persistence/prisma-project.repository';
-import { PrismaModule } from '@/shared/database/prisma.module';
-import { AuthModule } from '../auth/infrastructure/http/auth.module';
+import { ProjectMembersController } from './infrastructure/http/project-members.controller';
+import { ProjectsCrudService } from './infrastructure/services/projects-crud.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { PrismaModule } from '../../shared/database/prisma.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, JwtModule.register({ secret: 'super-secret' })],
-  controllers: [ProjectsController],
-  providers: [
-    {
-      provide: 'ProjectRepository',
-      useClass: PrismaProjectRepository,
-    },
-    CreateProjectUseCase,
-    GetProjectsByOrganizationUseCase,
-    UpdateProjectUseCase,
-    DeleteProjectUseCase,
-  ],
-  exports: [
-    CreateProjectUseCase,
-    GetProjectsByOrganizationUseCase,
-    UpdateProjectUseCase,
-    DeleteProjectUseCase,
-  ],
+  imports: [PrismaModule],
+  controllers: [ProjectsController, ProjectMembersController],
+  providers: [ProjectsCrudService, NotificationsService],
+  exports: [ProjectsCrudService],
 })
 export class ProjectsModule {}

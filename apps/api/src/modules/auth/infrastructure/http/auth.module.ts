@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 
 import { AuthController } from './auth.controller';
 import { APP_GUARD } from '@nestjs/core';
@@ -19,6 +20,8 @@ import { JwtTokenGenerator } from '../security/jwt-token-generator';
 import { JwtStrategy } from '../security/jwt.strategy';
 import { RefreshTokenStrategy } from '../security/refresh-token.strategy';
 
+import { PrismaService } from '@/shared/database/prisma.service';
+
 import {
   USER_REPOSITORY,
   PASSWORD_HASHER,
@@ -27,11 +30,18 @@ import {
 } from '../../application/ports';
 
 @Module({
-  imports: [JwtModule.register({ secret: 'super-secret' })],
+  imports: [
+    PassportModule,
+    JwtModule.register({ 
+      secret: process.env.JWT_SECRET || 'super-secret',
+      signOptions: { expiresIn: '1h' }
+    })
+  ],
   controllers: [AuthController],
   providers: [
     JwtStrategy,
     RefreshTokenStrategy,
+    PrismaService,
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
@@ -56,8 +66,8 @@ import {
     // Use cases
     {
       provide: RegisterUserUseCase,
-      useFactory: (repo, hasher) => new RegisterUserUseCase(repo, hasher),
-      inject: [USER_REPOSITORY, PASSWORD_HASHER],
+      useFactory: (repo, hasher, tokenGen, prisma) => new RegisterUserUseCase(repo, hasher, tokenGen, prisma),
+      inject: [USER_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR, PrismaService],
     },
     {
       provide: LoginUseCase,
@@ -76,5 +86,6 @@ import {
       inject: [REFRESH_TOKEN_REPOSITORY],
     },
   ],
+  exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {}

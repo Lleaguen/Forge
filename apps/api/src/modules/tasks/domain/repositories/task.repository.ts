@@ -1,9 +1,10 @@
-import { Task } from '../entities/task.entity';
+import { Task } from '../entities/task.entity'
+
+export const TASK_REPOSITORY = Symbol('TaskRepository')
 
 export interface TaskRepository {
-  create(task: Task): Promise<void>;
-  findByProject(projectId: string): Promise<Task[]>;
-  findById(id: string): Promise<Task | null>;
-  update(task: Task): Promise<void>;
-  delete(id: string): Promise<void>;
+  save(task: Task): Promise<void>
+  findById(id: string): Promise<Task | null>
+  findByProjectId(projectId: string): Promise<Task[]>
+  delete(id: string): Promise<void>
 }

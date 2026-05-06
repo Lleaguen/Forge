@@ -11,11 +11,26 @@ model User {
   id           String   @id @default(uuid())
   email        String   @unique
   passwordHash String
+  fullName     String?  @map("full_name")
+  avatarUrl    String?  @map("avatar_url")
   role         String   @default("USER")
   createdAt    DateTime @default(now())
 
+  projects Project[]
+
+  // Task relations
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks  Task[] @relation("TaskCreator")
+
   memberships   Membership[]
   refreshTokens RefreshToken[]
+  
+  // Invitations
+  sentInvitations     Invitation[] @relation("InvitationSender")
+  receivedInvitations Invitation[] @relation("InvitationReceiver")
+  
+  // Notifications
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -25,7 +40,8 @@ model Organization {
   name String
 
   memberships Membership[]
-  projects     Project[]
+  projects    Project[]
+  invitations Invitation[]
 
   @@map("organizations")
 }
@@ -39,17 +55,82 @@ model Membership {
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, organizationId], name: "userId_organizationId")
   @@index([userId])
   @@index([organizationId])
   @@map("memberships")
 }
 
+model Invitation {
+  id             String @id @default(uuid())
+  email          String
+  organizationId String
+  projectId      String?
+  role           String @default("MEMBER")
+  status         InvitationStatus @default(PENDING)
+  
+  invitedById    String
+  invitedBy      User @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Cascade)
+  
+  invitedUserId  String?
+  invitedUser    User? @relation("InvitationReceiver", fields: [invitedUserId], references: [id], onDelete: Cascade)
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project        Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Notifications
+  notifications  Notification[]
+  
+  token          String @unique
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  rejectedAt     DateTime?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([email])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([token])
+  @@index([status])
+  @@map("invitations")
+}
+
+model Notification {
+  id        String @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json? // Additional data (invitation token, project info, etc.)
+  
+  isRead    Boolean @default(false)
+  readAt    DateTime?
+  
+  // Relations
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Optional relations for specific notification types
+  invitationId String?
+  invitation   Invitation? @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
 model RefreshToken {
-  token      String   @id
-  userId     String
-  email      String
-  expiresAt  DateTime
-  revokedAt  DateTime?
+  token     String    @id
+  userId    String
+  email     String
+  expiresAt DateTime
+  revokedAt DateTime?
 
   createdAt DateTime @default(now())
 
@@ -60,30 +141,126 @@ model RefreshToken {
 }
 
 model Project {
-  id             String   @id @default(uuid())
-  organizationId String
-  name           String
-  description    String?
+  id String @id @default(uuid())
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  tasks          Task[]
+  name        String
+  description String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  tasks Task[]
+  invitations Invitation[]
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
+  @@index([userId])
   @@map("projects")
 }
 
 model Task {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   projectId String
-  title     String
-  status    String   @default("TODO")
-
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
+  
+  // Core fields - Required
+  title       String
+  description String?
+  
+  // Classification & Priority
+  category    TaskCategory @default(DEVELOPMENT)
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
+  
+  // Assignment & Ownership
+  assigneeId String?
+  createdById String
+  
+  // Time tracking & Planning
+  estimatedHours Float?
+  actualHours    Float?     @default(0)
+  dueDate        DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  
+  // Metadata
+  tags       String[] // For flexible categorization
+  position   Int      @default(0) // For ordering within status columns
+  
+  // Relations
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee  User?   @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy User    @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  
+  // Audit fields
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
   @@map("tasks")
+}
+
+// Enums for better type safety and scalability
+enum TaskCategory {
+  DEVELOPMENT     // Backend, Frontend, Full-stack development
+  DESIGN          // UI/UX, Graphics, Prototyping
+  ARCHITECTURE    // System design, Technical planning
+  TESTING         // QA, Unit tests, Integration tests
+  DOCUMENTATION   // Technical docs, User guides
+  RESEARCH        // Investigation, Proof of concepts
+  DEPLOYMENT      // DevOps, Infrastructure, Releases
+  MAINTENANCE     // Bug fixes, Refactoring, Updates
+  PLANNING        // Project planning, Requirements gathering
+  REVIEW          // Code review, Design review
+  
+  @@map("task_categories")
+}
+
+enum TaskPriority {
+  LOW       // Nice to have, can be delayed
+  MEDIUM    // Standard priority, planned work
+  HIGH      // Important, should be done soon
+  URGENT    // Critical, needs immediate attention
+  CRITICAL  // Blocking, highest priority
+  
+  @@map("task_priorities")
+}
+
+enum TaskStatus {
+  TODO        // Not started
+  IN_PROGRESS // Currently being worked on
+  IN_REVIEW   // Waiting for review/approval
+  BLOCKED     // Cannot proceed due to dependencies
+  DONE        // Completed successfully
+  CANCELLED   // Cancelled or no longer needed
+  
+  @@map("task_statuses")
+}
+
+enum InvitationStatus {
+  PENDING   // Invitation sent, waiting for response
+  ACCEPTED  // Invitation accepted
+  REJECTED  // Invitation rejected
+  EXPIRED   // Invitation expired
+  CANCELLED // Invitation cancelled by sender
+  
+  @@map("invitation_statuses")
+}
+
+enum NotificationType {
+  PROJECT_INVITATION    // Invitation to join a project
+  TASK_ASSIGNED        // Task assigned to user
+  TASK_COMPLETED       // Task completed
+  PROJECT_UPDATE       // Project update
+  SYSTEM_ANNOUNCEMENT  // System-wide announcement
+  
+  @@map("notification_types")
 }

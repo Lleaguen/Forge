@@ -3,28 +3,53 @@ import { randomUUID } from 'crypto';
 export class Project {
   private constructor(
     private readonly id: string,
-    private readonly organizationId: string,
+    private readonly userId: string,
     private readonly createdAt: Date,
     private name: string,
     private description?: string,
+    private readonly organizationId?: string,
   ) {}
 
   static create(props: {
-    organizationId: string;
+    userId: string;
     name: string;
     description?: string;
+    organizationId?: string;
   }) {
     return new Project(
       randomUUID(),
-      props.organizationId,
+      props.userId,
       new Date(),
       props.name,
       props.description,
+      props.organizationId,
+    );
+  }
+
+  static fromPersistence(props: {
+    id: string;
+    userId: string;
+    name: string;
+    description?: string;
+    organizationId?: string;
+    createdAt: Date;
+  }) {
+    return new Project(
+      props.id,
+      props.userId,
+      props.createdAt,
+      props.name,
+      props.description,
+      props.organizationId,
     );
   }
 
   getId() {
     return this.id;
+  }
+
+  getUserId() {
+    return this.userId;
   }
 
   getOrganizationId() {
@@ -49,21 +74,5 @@ export class Project {
 
   updateDescription(description?: string) {
     this.description = description;
-  }
-
-  static fromPersistence(props: {
-    id: string;
-    organizationId: string;
-    name: string;
-    description?: string;
-    createdAt: Date;
-  }) {
-    return new Project(
-      props.id,
-      props.organizationId,
-      props.createdAt,
-      props.name,
-      props.description,
-    );
   }
 }

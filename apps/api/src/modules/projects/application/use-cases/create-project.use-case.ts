@@ -8,12 +8,19 @@ export class CreateProjectUseCase {
     @Inject('ProjectRepository') private readonly repo: ProjectRepository,
   ) {}
 
-  async execute(input: {
-    organizationId: string;
-    name: string;
-    description?: string;
-  }) {
-    const project = Project.create(input);
-    await this.repo.create(project);
-  }
+ async execute(input: {
+  userId: string;
+  organizationId?: string;
+  name: string;
+  description?: string;
+}) {
+  const project = Project.create({
+    userId: input.userId,
+    organizationId: input.organizationId,
+    name: input.name,
+    description: input.description,
+  });
+
+  await this.repo.create(project);
+}
 }

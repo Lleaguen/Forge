@@ -1,79 +1,113 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  Param,
   Post,
-  Put,
+  Patch,
+  Param,
   Query,
+  Request,
   UseGuards,
-  UsePipes,
-} from '@nestjs/common';
-import { AuthGuard } from '@/shared/guards/auth.guard';
-import { RolesGuard } from '@/shared/guards/roles.guard';
-import { PermissionsGuard } from '@/shared/guards/permissions.guard';
-import { Roles } from '@/shared/guards/roles.decorator';
-import { RequirePermissions } from '@/shared/guards/permissions.decorator';
-import { Permissions } from '@/shared/permissions/permissions';
-import { CreateTaskUseCase } from '../../application/use-cases/create-task.use-case';
-import { UpdateTaskUseCase } from '../../application/use-cases/update-task.use-case';
-import { GetTasksByProjectUseCase } from '../../application/use-cases/get-tasks-by-project.use-case';
-import { DeleteTaskUseCase } from '../../application/use-cases/delete-task.use-case';
-import {
-  CreateTaskDtoSchema,
-  type CreateTaskDto,
-} from '../../application/dtos/create-task.dto';
-import {
-  UpdateTaskDtoSchema,
-  type UpdateTaskDto,
-} from '../../application/dtos/update-task.dto';
-import { ZodValidationPipe } from '../../../auth/infrastructure/http/pipes/zod-validation.pipe';
+} from '@nestjs/common'
+import { BaseController } from '@/shared/decorators/base-controller.decorator'
+import { ValidateBody } from '@/shared/decorators/validation.decorator'
+import { JwtAuthGuard } from '@/modules/auth/infrastructure/security/jwt-auth.guard'
+import { ResponseUtil } from '@/shared/utils/response.util'
+import { TasksCrudService } from '../services/tasks-crud.service'
+import { CreateTaskUseCase } from '../../application/use-cases/create-task.use-case'
+import { CreateTaskSchema } from '@/shared/zod/tasks/create-task.schema'
+import { CreateTaskDto } from '../../application/dtos/create-task.dto'
+import { UserContext } from '@/shared/services/base-crud.service'
 
-@Controller('tasks')
+@BaseController('tasks')
+@UseGuards(JwtAuthGuard)
 export class TasksController {
   constructor(
-    private readonly createTask: CreateTaskUseCase,
-    private readonly updateTask: UpdateTaskUseCase,
-    private readonly getTasksByProject: GetTasksByProjectUseCase,
-    private readonly deleteTask: DeleteTaskUseCase,
+    private readonly createTaskUseCase: CreateTaskUseCase,
+    private readonly tasksService: TasksCrudService,
   ) {}
 
   @Post()
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.CREATE_TASK)
-  @UsePipes(new ZodValidationPipe(CreateTaskDtoSchema))
-  async create(@Body() body: CreateTaskDto) {
-    await this.createTask.execute({
-      projectId: body.projectId,
-      title: body.title,
-      status: body.status,
-    });
+  @ValidateBody(CreateTaskSchema)
+  async create(@Body() dto: CreateTaskDto, @Request() req: any) {
+    const task = await this.createTaskUseCase.execute(dto, req.user.sub)
+    return ResponseUtil.success(task.toPrimitives(), 'Task created successfully')
   }
 
   @Get()
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.VIEW_TASK)
-  async getByProject(@Query('projectId') projectId: string) {
-    return this.getTasksByProject.execute(projectId);
+  async getByProject(
+    @Query('projectId') projectId: string,
+    @Query('moveTask') moveTaskId: string,
+    @Query('newStatus') newStatus: string,
+    @Request() req: any
+  ) {
+    const userContext: UserContext = {
+      sub: req.user.sub,
+      organizationId: req.user.organizationId
+    }
+
+    // Handle task move operation
+    if (moveTaskId && newStatus) {
+      try {
+        const updatedTask = await this.tasksService.updateStatus(
+          moveTaskId, 
+          newStatus, 
+          userContext
+        )
+        return ResponseUtil.success(updatedTask, 'Task moved successfully')
+      } catch (error) {
+        return ResponseUtil.error('Failed to move task')
+      }
+    }
+
+    // Handle normal get tasks operation
+    if (!projectId) {
+      return ResponseUtil.error('Project ID is required')
+    }
+
+    try {
+      const tasks = await this.tasksService.findByProject(projectId, userContext)
+      return ResponseUtil.success(tasks)
+    } catch (error) {
+      throw error
+    }
   }
 
-  @Put(':id')
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.UPDATE_TASK)
-  @UsePipes(new ZodValidationPipe(UpdateTaskDtoSchema))
-  async update(@Param('id') id: string, @Body() body: UpdateTaskDto) {
-    await this.updateTask.execute(id, body);
-  }
+  @Patch(':id')
+  async update(
+    @Param('id') taskId: string,
+    @Body() updateData: any,
+    @Request() req: any
+  ) {
+    const userContext: UserContext = {
+      sub: req.user.sub,
+      organizationId: req.user.organizationId
+    }
 
-  @Delete(':id')
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.DELETE_TASK)
-  async delete(@Param('id') id: string) {
-    await this.deleteTask.execute(id);
+    try {
+      // Handle assigneeId - connect/disconnect relation
+      const { assigneeId, ...rest } = updateData
+      
+      const data: any = { ...rest }
+      
+      if (assigneeId !== undefined) {
+        if (assigneeId === null || assigneeId === '') {
+          // Unassign
+          data.assignee = { disconnect: true }
+        } else {
+          // Assign to user
+          data.assignee = { connect: { id: assigneeId } }
+        }
+      }
+
+      const updatedTask = await this.tasksService.updateWithAccess(
+        taskId,
+        data,
+        userContext
+      )
+      return ResponseUtil.success(updatedTask, 'Task updated successfully')
+    } catch (error) {
+      return ResponseUtil.error('Failed to update task')
+    }
   }
 }

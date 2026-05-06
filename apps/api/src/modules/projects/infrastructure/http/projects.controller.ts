@@ -1,79 +1,72 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-  UsePipes,
-} from '@nestjs/common';
-import { AuthGuard } from '@/shared/guards/auth.guard';
-import { RolesGuard } from '@/shared/guards/roles.guard';
-import { PermissionsGuard } from '@/shared/guards/permissions.guard';
-import { Roles } from '@/shared/guards/roles.decorator';
-import { RequirePermissions } from '@/shared/guards/permissions.decorator';
-import { Permissions } from '@/shared/permissions/permissions';
-import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
-import { GetProjectsByOrganizationUseCase } from '../../application/use-cases/get-projects-by-organization.use-case';
-import { UpdateProjectUseCase } from '../../application/use-cases/update-project.use-case';
-import { DeleteProjectUseCase } from '../../application/use-cases/delete-project.use-case';
-import {
-  CreateProjectDtoSchema,
-  type CreateProjectDto,
-} from '../../application/dtos/create-project.dto';
-import {
-  UpdateProjectDtoSchema,
-  type UpdateProjectDto,
-} from '../../application/dtos/update-project.dto';
-import { ZodValidationPipe } from '../../../auth/infrastructure/http/pipes/zod-validation.pipe';
+import { Body, Post, Get, Put, Delete, Param, Request, UseGuards } from '@nestjs/common';
+import { BaseController } from '@/shared/decorators/base-controller.decorator';
+import { ValidateBody } from '@/shared/decorators/validation.decorator';
+import { JwtAuthGuard } from '@/modules/auth/infrastructure/security/jwt-auth.guard';
+import { ProjectsCrudService, Project } from '../services/projects-crud.service';
+import { ApiResponse, UserContext } from '@/shared/services/base-crud.service';
+import { z } from 'zod';
 
-@Controller('projects')
+const CreateProjectSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional()
+});
+
+const UpdateProjectSchema = z.object({
+  name: z.string().min(1, 'Name is required').optional(),
+  description: z.string().optional()
+});
+
+type CreateProjectDto = z.infer<typeof CreateProjectSchema>;
+type UpdateProjectDto = z.infer<typeof UpdateProjectSchema>;
+
+@BaseController('projects')
+@UseGuards(JwtAuthGuard)
 export class ProjectsController {
-  constructor(
-    private readonly createProject: CreateProjectUseCase,
-    private readonly getProjectsByOrganization: GetProjectsByOrganizationUseCase,
-    private readonly updateProject: UpdateProjectUseCase,
-    private readonly deleteProject: DeleteProjectUseCase,
-  ) {}
-
-  @Post()
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.CREATE_PROJECT)
-  @UsePipes(new ZodValidationPipe(CreateProjectDtoSchema))
-  async create(@Body() body: CreateProjectDto) {
-    await this.createProject.execute({
-      organizationId: body.organizationId,
-      name: body.name,
-      description: body.description,
-    });
-  }
+  constructor(private readonly projectsService: ProjectsCrudService) {}
 
   @Get()
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.VIEW_PROJECT)
-  async getByOrganization(@Query('organizationId') organizationId: string) {
-    return this.getProjectsByOrganization.execute(organizationId);
+  async findAll(@Request() req: any) {
+    return this.projectsService.findProjectsForUser(req.user.sub);
+  }
+
+  @Post()
+  @ValidateBody(CreateProjectSchema)
+  async create(@Body() createDto: CreateProjectDto, @Request() req: any) {
+    return this.projectsService.createProjectWithOrganization(createDto, req.user.sub);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    const userContext: UserContext = {
+      sub: req.user.sub,
+      organizationId: req.user.organizationId
+    };
+    const entity = await this.projectsService.findByIdWithAccess(id, userContext);
+    return ApiResponse.success(entity);
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.UPDATE_PROJECT)
-  @UsePipes(new ZodValidationPipe(UpdateProjectDtoSchema))
-  async update(@Param('id') id: string, @Body() body: UpdateProjectDto) {
-    await this.updateProject.execute(id, body);
+  @ValidateBody(UpdateProjectSchema)
+  async update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateProjectDto,
+    @Request() req: any
+  ) {
+    const userContext: UserContext = {
+      sub: req.user.sub,
+      organizationId: req.user.organizationId
+    };
+    const entity = await this.projectsService.updateWithAccess(id, updateDto, userContext);
+    return ApiResponse.success(entity);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard, RolesGuard, PermissionsGuard)
-  @Roles('admin')
-  @RequirePermissions(Permissions.DELETE_PROJECT)
-  async delete(@Param('id') id: string) {
-    await this.deleteProject.execute(id);
+  async remove(@Param('id') id: string, @Request() req: any) {
+    const userContext: UserContext = {
+      sub: req.user.sub,
+      organizationId: req.user.organizationId
+    };
+    await this.projectsService.deleteWithAccess(id, userContext);
+    return ApiResponse.success(null, 'Project deleted successfully');
   }
 }

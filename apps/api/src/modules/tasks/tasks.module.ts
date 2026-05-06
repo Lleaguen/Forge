@@ -1,32 +1,29 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { TasksController } from './infrastructure/http/tasks.controller';
-import { CreateTaskUseCase } from './application/use-cases/create-task.use-case';
-import { UpdateTaskUseCase } from './application/use-cases/update-task.use-case';
-import { GetTasksByProjectUseCase } from './application/use-cases/get-tasks-by-project.use-case';
-import { DeleteTaskUseCase } from './application/use-cases/delete-task.use-case';
-import { PrismaTaskRepository } from './infrastructure/persistence/prisma-task.repository';
-import { PrismaModule } from '@/shared/database/prisma.module';
-import { AuthModule } from '../auth/infrastructure/http/auth.module';
+import { Module } from '@nestjs/common'
+import { PrismaModule } from '@/shared/database/prisma.module'
+import { TasksController } from './infrastructure/http/tasks.controller'
+import { TasksCrudService } from './infrastructure/services/tasks-crud.service'
+import { CreateTaskUseCase } from './application/use-cases/create-task.use-case'
+import { GetTasksByProjectUseCase } from './application/use-cases/get-tasks-by-project.use-case'
+import { TASK_REPOSITORY, TaskRepository } from './domain/repositories/task.repository'
+import { PrismaTaskRepository } from './infrastructure/persistence/prisma-task.repository'
 
 @Module({
-  imports: [PrismaModule, AuthModule, JwtModule.register({ secret: 'super-secret' })],
+  imports: [PrismaModule],
   controllers: [TasksController],
   providers: [
+    TasksCrudService,
+    CreateTaskUseCase,
+    GetTasksByProjectUseCase,
     {
-      provide: 'TaskRepository',
+      provide: TASK_REPOSITORY,
       useClass: PrismaTaskRepository,
     },
-    CreateTaskUseCase,
-    UpdateTaskUseCase,
-    GetTasksByProjectUseCase,
-    DeleteTaskUseCase,
   ],
   exports: [
+    TasksCrudService,
     CreateTaskUseCase,
-    UpdateTaskUseCase,
     GetTasksByProjectUseCase,
-    DeleteTaskUseCase,
+    TASK_REPOSITORY,
   ],
 })
 export class TasksModule {}
