@@ -19,8 +19,8 @@ export interface Activity {
 
 export async function getActivities(projectId?: string): Promise<Activity[]> {
   const url = projectId ? `/activities?projectId=${projectId}` : '/activities'
-  const { data } = await api.get<Activity[]>(url)
-  return data
+  const response = await api.get(url)
+  return response.data.data || [] // Handle the nested data structure
 }
 
 export async function getDashboardStats(): Promise<{
@@ -29,6 +29,6 @@ export async function getDashboardStats(): Promise<{
   teamMembers: number
   activityToday: number
 }> {
-  const { data } = await api.get('/dashboard/stats')
-  return data
+  const response = await api.get('/dashboard/stats')
+  return response.data.data || {} // Handle the nested data structure
 }

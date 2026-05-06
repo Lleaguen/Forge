@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   getOrganizations,
   createOrganization,
@@ -9,45 +9,38 @@ import {
   type CreateOrganizationPayload,
   type UpdateOrganizationPayload,
 } from '../api/organizations.api'
-import { queryKeys } from '../shared/api/queryKeys'
+import { useCreateMutation, useUpdateMutation, useDeleteMutation } from './useGenericMutation'
+
+const ORGANIZATIONS_KEY = ['organizations']
 
 export function useOrganizations() {
   return useQuery({
-    queryKey: ['organizations'],
+    queryKey: ORGANIZATIONS_KEY,
     queryFn: getOrganizations,
   })
 }
 
 export function useCreateOrganization() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (payload: CreateOrganizationPayload) => createOrganization(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['organizations'] })
-    },
-  })
+  return useCreateMutation(
+    createOrganization,
+    'Organization',
+    [ORGANIZATIONS_KEY]
+  )
 }
 
 export function useUpdateOrganization() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: UpdateOrganizationPayload }) =>
+  return useUpdateMutation(
+    ({ id, payload }: { id: string; payload: UpdateOrganizationPayload }) =>
       updateOrganization(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['organizations'] })
-    },
-  })
+    'Organization',
+    [ORGANIZATIONS_KEY]
+  )
 }
 
 export function useDeleteOrganization() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: string) => deleteOrganization(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['organizations'] })
-    },
-  })
+  return useDeleteMutation(
+    deleteOrganization,
+    'Organization',
+    [ORGANIZATIONS_KEY]
+  )
 }

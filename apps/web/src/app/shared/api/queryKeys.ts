@@ -14,4 +14,7 @@ export const queryKeys = {
   columns: {
     byProject: (projectId: string) => ['columns', projectId] as const,
   },
+  members: {
+    byProject: (projectId: string) => ['members', projectId] as const,
+  },
 }

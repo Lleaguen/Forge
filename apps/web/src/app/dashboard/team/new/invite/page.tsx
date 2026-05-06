@@ -52,7 +52,6 @@ export default function InviteTeamPage() {
   ] as const
 
   const onSubmit = (data: InviteTeamForm) => {
-    console.log(data)
     router.push('/dashboard')
   }
 

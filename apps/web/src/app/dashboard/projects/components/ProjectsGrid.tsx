@@ -14,15 +14,10 @@ interface Props {
 
 export default function ProjectsGrid({ onOpenProject }: Props) {
   const { user } = useAuth()
-  const { data: projects, isLoading, error } = useProjects(user?.organization?.id)
+  const { data: projects, isLoading, error } = useProjects()
 
-  if (isLoading) {
-    return <LoadingState message="Loading projects..." />
-  }
-
-  if (error) {
-    return <ErrorState message="Failed to load projects. Please try again." />
-  }
+  if (isLoading) return <LoadingState message="Loading projects..." />
+  if (error) return <ErrorState message="Failed to load projects. Please try again." />
 
   if (!projects || projects.length === 0) {
     return (
@@ -38,13 +33,8 @@ export default function ProjectsGrid({ onOpenProject }: Props) {
       {projects.map((project) => (
         <ProjectCard
           key={project.id}
-          id={project.id}
-          title={project.name}
-          description={project.description || ''}
-          progress={0}
-          status="on-track"
-          membersCount={0}
-          onOpen={() => onOpenProject(project.id)}
+          project={project}
+          onOpen={onOpenProject}
         />
       ))}
       <CreateProjectCard />

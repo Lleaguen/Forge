@@ -49,7 +49,6 @@ export default function CreateTeamPage() {
   ] as const
 
   const onSubmit = (data: CreateTeamForm) => {
-    console.log(data)
     router.push('/dashboard/team/new/invite')
   }
 

@@ -1,6 +1,7 @@
 "use client" // Obligatorio para providers de contexto
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ToastContainer } from './shared/components/ToastContainer'
 import { useState, ReactNode } from 'react'
 
 export default function Providers({ children }: { children: ReactNode }) {
@@ -10,6 +11,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+      <ToastContainer />
     </QueryClientProvider>
   )
 }

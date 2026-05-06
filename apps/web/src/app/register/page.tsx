@@ -14,10 +14,8 @@ import { FormField } from '../login/components/FormField'
 import Input from '../../components/shared/input'
 
 import SocialAuth from '@/components/shared/SocialAtuh'
-import { PlanCard } from '@/components/ui/planCard'
 import { Stepper } from './components/RegisterStepHeader'
-
-import { PLANS } from '../../components/ui/plans'
+import { AuthGuard } from '../components/AuthGuard'
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1)
@@ -27,17 +25,17 @@ export default function RegisterPage() {
   const STEPS = [
     {
       id: 1,
-      label: 'Step 1 of 2: Basic Setup',
-      description: 'Account details and verification',
+      label: 'Step 1 of 2: Basic Information',
+      description: 'Enter your personal details',
       progress: 0.5,
-      fields: ['fullName', 'email', 'password'],
+      fields: ['fullName', 'email', 'confirmEmail'],
     },
     {
       id: 2,
-      label: 'Step 2 of 2: Choose Plan',
-      description: 'Select the plan that fits your needs',
+      label: 'Step 2 of 2: Security',
+      description: 'Set up your password',
       progress: 1,
-      fields: ['plan'],
+      fields: ['password', 'confirmPassword'],
     },
   ] as const
 
@@ -46,18 +44,40 @@ export default function RegisterPage() {
     formState: { errors },
     trigger,
     watch,
-    setValue,
   } = form
 
   const currentStep = STEPS[step - 1]
 
   const handleContinue = async () => {
-    const isValid = await trigger([...currentStep.fields])
-    if (isValid) setStep((prev) => prev + 1)
+    // Validate step 1 fields individually first
+    const fieldsValid = await trigger([...currentStep.fields])
+    
+    // Also check cross-field validation (email match)
+    if (fieldsValid) {
+      const emailVal = form.getValues('email')
+      const confirmEmailVal = form.getValues('confirmEmail')
+      if (emailVal !== confirmEmailVal) {
+        form.setError('confirmEmail', { message: 'Email addresses do not match' })
+        return
+      }
+      setStep((prev) => prev + 1)
+    }
+  }
+
+  const handleSubmit = async (data: any) => {
+    // Validate password match before submitting
+    if (data.password !== data.confirmPassword) {
+      form.setError('confirmPassword', { message: 'Passwords do not match' })
+      return
+    }
+    onSubmit(data)
+  }
+
+  const handleBack = () => {
+    setStep((prev) => prev - 1)
   }
 
   const password = watch('password') ?? ''
-  const selectedPlan = watch('plan')
 
   const passwordStrength =
     password.length >= 8
@@ -67,13 +87,14 @@ export default function RegisterPage() {
       : 'WEAK'
 
   return (
-    <div className="
-      min-h-screen flex flex-col
-      bg-white
-      dark:bg-gradient-to-b
-      dark:from-brand-bg
-      dark:to-brand-surface
-    ">
+    <AuthGuard requireAuth={false}>
+      <div className="
+        min-h-screen flex flex-col
+        bg-white
+        dark:bg-gradient-to-b
+        dark:from-brand-bg
+        dark:to-brand-surface
+      ">
       <HeaderForm
         className="items-center-safe"
         action={<Button href="/login">Sign In</Button>}
@@ -84,9 +105,9 @@ export default function RegisterPage() {
           form={form}
           title={<Stepper steps={STEPS} currentStep={step} />}
           footer="© 2024 Forge Web Inc. All rights reserved."
-          onSubmit={onSubmit}
+          onSubmit={handleSubmit}
         >
-          {/* ---------------- STEP 1 ---------------- */}
+          {/* ---------------- STEP 1: Basic Information ---------------- */}
           {step === 1 && (
             <>
               <FormField label="Full Name" error={errors.fullName?.message}>
@@ -97,7 +118,7 @@ export default function RegisterPage() {
                 />
               </FormField>
 
-              <FormField label="Work Email" error={errors.email?.message}>
+              <FormField label="Email Address" error={errors.email?.message}>
                 <Input
                   type="email"
                   placeholder="jane@company.com"
@@ -106,33 +127,13 @@ export default function RegisterPage() {
                 />
               </FormField>
 
-              <FormField label="Password" error={errors.password?.message}>
+              <FormField label="Confirm Email Address" error={errors.confirmEmail?.message}>
                 <Input
-                  type="password"
-                  placeholder="••••••••"
-                  hasError={!!errors.password}
-                  {...register('password')}
-                  className='mb-10'
+                  type="email"
+                  placeholder="jane@company.com"
+                  hasError={!!errors.confirmEmail}
+                  {...register('confirmEmail')}
                 />
-
-                {/* Password strength */}
-                <div className="mt-2 space-y-1">
-                  <div className="flex gap-2">
-                    {[2, 4, 6, 8].map((n) => (
-                      <span
-                        key={n}
-                        className={`h-1 flex-1 rounded ${
-                          password.length >= n
-                            ? 'bg-brand-primary'
-                            : 'bg-brand-primary/20'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs font-medium text-brand-primary">
-                    {passwordStrength}
-                  </span>
-                </div>
               </FormField>
 
               <Button
@@ -145,31 +146,67 @@ export default function RegisterPage() {
             </>
           )}
 
-          {/* ---------------- STEP 2 ---------------- */}
+          {/* ---------------- STEP 2: Security ---------------- */}
           {step === 2 && (
             <>
-              <div className="grid gap-4">
-                {PLANS.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    selected={selectedPlan === plan.id}
-                    onSelect={(id) =>
-                      setValue('plan', id, { shouldValidate: true })
-                    }
-                  />
-                ))}
-              </div>
+              <FormField label="Password" error={errors.password?.message}>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  hasError={!!errors.password}
+                  {...register('password')}
+                />
 
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={!selectedPlan}
-                isLoading={isLoading}
-                className="w-full"
-              >
-                Register
-              </Button>
+                {/* Password strength */}
+                {password && (
+                  <div className="mt-2 space-y-1">
+                    <div className="flex gap-2">
+                      {[2, 4, 6, 8].map((n) => (
+                        <span
+                          key={n}
+                          className={`h-1 flex-1 rounded ${
+                            password.length >= n
+                              ? 'bg-brand-primary'
+                              : 'bg-brand-primary/20'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-medium text-brand-primary">
+                      {passwordStrength}
+                    </span>
+                  </div>
+                )}
+              </FormField>
+
+              <FormField label="Confirm Password" error={errors.confirmPassword?.message}>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  hasError={!!errors.confirmPassword}
+                  {...register('confirmPassword')}
+                />
+              </FormField>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleBack}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                
+                <Button
+                  type="submit"
+                  variant="primary"
+                  isLoading={isLoading}
+                  className="flex-1"
+                >
+                  Create Account
+                </Button>
+              </div>
 
               <SocialAuth />
             </>
@@ -177,5 +214,6 @@ export default function RegisterPage() {
         </FormCard>
       </Main>
     </div>
+    </AuthGuard>
   )
 }

@@ -15,27 +15,26 @@ export type RegisterResponse = {
 }
 
 export async function login(payload: LoginCredentials): Promise<LoginResponse> {
-  const { data } = await api.post<LoginResponse>('/auth/login', payload)
-  return data
+  const { data } = await api.post<{ success: boolean; data: LoginResponse }>('/auth/login', payload)
+  return data.data
 }
 
 export async function register(payload: RegisterCredentials): Promise<RegisterResponse> {
-  const { data } = await api.post<RegisterResponse>('/auth/register', payload)
-  return data
+  const { data } = await api.post<{ success: boolean; data: RegisterResponse }>('/auth/register', payload)
+  return data.data
 }
 
-// Nota: El endpoint /auth/me no existe en el backend
-// El usuario viene en la respuesta del login/register
-// Si necesitas obtener el usuario actual, deberías guardarlo del login
 export async function getMe(): Promise<User | null> {
-  // Como no hay endpoint /auth/me, retornamos null
-  // El usuario debería estar guardado del login
-  // TODO: Implementar si el backend agrega este endpoint
-  return null
+  try {
+    const { data } = await api.get<{ success: boolean; data: User }>('/auth/me');
+    return data.success ? data.data : null;
+  } catch (error) {
+    return null;
+  }
 }
 
-export async function refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
-  const { data } = await api.post<{ accessToken: string }>('/auth/refresh', { refreshToken })
+export async function refreshToken(): Promise<{ success: boolean }> {
+  const { data } = await api.post<{ success: boolean }>('/auth/refresh', {})
   return data
 }
 

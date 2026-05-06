@@ -6,6 +6,7 @@ import { FiCalendar, FiSend } from 'react-icons/fi'
 import { Button } from '@/components/shared/button'
 import Input from '@/components/shared/input'
 import { useCreateProject } from '@/app/hooks/useProjects'
+import { useErrorHandler } from '@/app/shared/hooks/useErrorHandler'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
@@ -19,6 +20,7 @@ type CreateProjectForm = z.infer<typeof createProjectSchema>
 export default function NewProjectPage() {
   const router = useRouter()
   const createProject = useCreateProject()
+  const { handleError, handleSuccess } = useErrorHandler()
 
   const {
     register,
@@ -31,9 +33,10 @@ export default function NewProjectPage() {
   const onSubmit = async (data: CreateProjectForm) => {
     try {
       await createProject.mutateAsync(data)
+      handleSuccess('Project created successfully!')
       router.push('/dashboard/projects')
     } catch (error) {
-      console.error('Error creating project:', error)
+      handleError(error, 'Failed to create project')
     }
   }
 

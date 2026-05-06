@@ -37,7 +37,6 @@ export default function PersonalInf() {
 
   const onSubmit = async (data: PersonalInfoForm) => {
     // TODO: Implementar actualización de perfil
-    console.log('Updating profile:', data)
   }
 
   if (isLoading) {

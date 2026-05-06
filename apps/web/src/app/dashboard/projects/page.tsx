@@ -25,7 +25,7 @@ export default function ProjectsPage() {
           setSelectedProjectId(null)
         }}
         onDropItem={(data) => {
-          console.log('Dropped inside modal:', data)
+          // Handle dropped item
         }}
       >
         {selectedProjectId && <ProjectModalLayout projectId={selectedProjectId} />}

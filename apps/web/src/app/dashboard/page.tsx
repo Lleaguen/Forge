@@ -61,12 +61,12 @@ export default function DashboardPage() {
             <div className="mt-4">
               <LoadingState message="Loading activities..." />
             </div>
-          ) : activities && activities.length > 0 ? (
+          ) : Array.isArray(activities) && activities.length > 0 ? (
             <div className="mt-4 space-y-3">
               {activities.slice(0, 5).map((activity) => (
                 <div key={activity.id} className="text-sm">
                   <p className="text-slate-700 dark:text-slate-300">
-                    <span className="font-medium">{activity.user.fullName}</span>{' '}
+                    <span className="font-medium">{activity.user?.fullName || 'Unknown User'}</span>{' '}
                     {activity.action}{' '}
                     <span className="text-brand-primary">{activity.highlight}</span>
                   </p>

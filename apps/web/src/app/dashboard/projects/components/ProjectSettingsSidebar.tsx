@@ -1,23 +1,21 @@
 'use client'
 
 import { ProjectView } from './types'
-import { FiSettings, FiPlus, FiArchive, FiLogOut } from 'react-icons/fi'
+import { FiSettings, FiPlus, FiLogOut, FiColumns } from 'react-icons/fi'
 
 interface Props {
   activeView: ProjectView
   onChangeView: (view: ProjectView) => void
-  onAddColumn: () => void
   onAddTask: () => void
-  onArchiveProject: () => void
+  onManageColumns: () => void
   onSignOut: () => void
 }
 
 export default function Sidebar({
   activeView,
   onChangeView,
-  onAddColumn,
   onAddTask,
-  onArchiveProject,
+  onManageColumns,
   onSignOut,
 }: Props) {
   const baseBtn = 'flex items-center gap-2 rounded-lg px-2 py-1 text-sm transition'
@@ -27,7 +25,7 @@ export default function Sidebar({
   return (
     <aside className="flex w-64 flex-col border-r border-white/10 bg-white p-4 dark:bg-brand-bg">
       <div className="mb-8">
-        <h1 className="text-xl font-semibold">
+        <h1 className="text-xl font-semibold text-slate-800 dark:text-white">
           <span className="text-brand-primary">V</span>exel
         </h1>
         <span className="text-xs text-brand-primary">GLOBAL</span>
@@ -52,21 +50,12 @@ export default function Sidebar({
           <FiSettings /> Project settings
         </button>
 
-        <button onClick={onAddColumn} className={baseBtn}>
-          <FiPlus /> Add column
-        </button>
-
-        <button onClick={onAddTask} className={baseBtn}>
+        <button onClick={onAddTask} className={`${baseBtn} hover:text-brand-primary`}>
           <FiPlus /> Add task
         </button>
 
-        <button className={`${baseBtn} ${active}`}>Manage statuses</button>
-
-        <button
-          onClick={onArchiveProject}
-          className="mt-4 flex items-center gap-2 text-red-400 hover:text-red-500"
-        >
-          <FiArchive /> Archive Project
+        <button onClick={onManageColumns} className={`${baseBtn} hover:text-brand-primary`}>
+          <FiColumns /> Manage Columns
         </button>
       </nav>
 

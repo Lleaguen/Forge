@@ -1,15 +1,17 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   getTasksByProject,
   createTask,
   updateTask,
+  moveTask,
   deleteTask,
   type CreateTaskPayload,
   type UpdateTaskPayload,
 } from '../api/tasks.api'
 import { queryKeys } from '../shared/api/queryKeys'
+import { useGenericMutation } from './useGenericMutation'
 
 export function useTasks(projectId: string) {
   return useQuery({
@@ -20,35 +22,41 @@ export function useTasks(projectId: string) {
 }
 
 export function useCreateTask() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (payload: CreateTaskPayload) => createTask(payload),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byProject(data.projectId) })
-    },
+  return useGenericMutation<any, CreateTaskPayload>({
+    mutationFn: createTask,
+    invalidateKeys: (data) => [queryKeys.tasks.byProject(data.projectId)],
+    successMessage: 'Task created successfully.',
   })
 }
 
 export function useUpdateTask() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ taskId, payload, projectId }: { taskId: string; payload: UpdateTaskPayload; projectId: string }) =>
-      updateTask(taskId, payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byProject(variables.projectId) })
+  return useGenericMutation<any, {
+    taskId: string
+    payload: UpdateTaskPayload
+    projectId: string
+    useStatusEndpoint?: boolean
+    silent?: boolean
+  }>({
+    mutationFn: ({ taskId, payload, useStatusEndpoint }) => {
+      if (useStatusEndpoint && payload.status) {
+        return moveTask(taskId, payload.status)
+      }
+      return updateTask(taskId, payload)
+    },
+    invalidateKeys: (_, variables) => [queryKeys.tasks.byProject(variables.projectId)],
+    successMessage: (_, variables) => {
+      if (variables.silent) return ''
+      return variables.useStatusEndpoint
+        ? 'Task moved successfully.'
+        : 'Task updated successfully.'
     },
   })
 }
 
 export function useDeleteTask() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ taskId, projectId }: { taskId: string; projectId: string }) => deleteTask(taskId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byProject(variables.projectId) })
-    },
+  return useGenericMutation<any, { taskId: string; projectId: string }>({
+    mutationFn: ({ taskId }) => deleteTask(taskId),
+    invalidateKeys: (_, variables) => [queryKeys.tasks.byProject(variables.projectId)],
+    successMessage: 'Task deleted successfully.',
   })
 }

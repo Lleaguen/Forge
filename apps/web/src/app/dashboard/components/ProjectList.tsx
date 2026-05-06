@@ -5,12 +5,27 @@ import { useAuth } from '@/app/hooks/useAuth'
 import { LoadingState } from '@/components/states/LoadingState'
 import { EmptyState } from '@/components/states/EmptyState'
 import { useRouter } from 'next/navigation'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, isValid, parseISO } from 'date-fns'
 
 export default function ProjectList() {
   const { user } = useAuth()
   const { data: projects, isLoading } = useProjects(user?.organization?.id)
   const router = useRouter()
+
+  // Helper function to safely format dates
+  const formatSafeDate = (dateString: string | undefined | null): string => {
+    if (!dateString) return 'No date available'
+    
+    try {
+      const date = parseISO(dateString)
+      if (!isValid(date)) return 'Invalid date'
+      
+      return formatDistanceToNow(date, { addSuffix: true })
+    } catch (error) {
+      console.warn('Error formatting date:', dateString, error)
+      return 'Date unavailable'
+    }
+  }
 
   if (isLoading) {
     return (
@@ -44,9 +59,9 @@ export default function ProjectList() {
 
       <ul className="space-y-3">
         {activeProjects.map((project) => {
-          const timeAgo = formatDistanceToNow(new Date(project.updatedAt), {
-            addSuffix: true,
-          })
+          // Use updatedAt if available, otherwise fall back to createdAt
+          const dateToFormat = project.updatedAt || project.createdAt
+          const timeAgo = formatSafeDate(dateToFormat)
 
           return (
             <li
@@ -57,7 +72,9 @@ export default function ProjectList() {
               <span className="text-sm font-medium text-slate-700 dark:text-brand-text">
                 {project.name}
               </span>
-              <span className="text-xs text-slate-400">Updated {timeAgo}</span>
+              <span className="text-xs text-slate-400">
+                {project.updatedAt ? 'Updated' : 'Created'} {timeAgo}
+              </span>
             </li>
           )
         })}

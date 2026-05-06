@@ -1,4 +1,4 @@
-export type TaskStatus = string
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'BLOCKED' | 'DONE' | 'CANCELLED'
 export type ProjectView = 'board' | 'settings'
 
 export interface Task {
