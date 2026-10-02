@@ -17,9 +17,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   
   app.enableCors({
-    origin: ['http://localhost:3001',
-            'https://wall-receptors-december-apparatus.trycloudflare.com']
-    ,
+    origin: [
+      'http://localhost:3001',
+      'https://lleaguen.github.io',
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
