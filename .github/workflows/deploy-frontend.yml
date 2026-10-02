@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'apps/web/**'
-  workflow_dispatch: # Permite correrlo manualmente desde GitHub
+  workflow_dispatch:
 
 permissions:
   contents: read
