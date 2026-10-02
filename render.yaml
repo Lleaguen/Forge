@@ -3,13 +3,15 @@ services:
     name: forge-api
     runtime: node
     rootDir: apps/api
-    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    buildCommand: npm install -g pnpm && pnpm install && pnpm exec prisma generate && pnpm exec prisma migrate deploy && pnpm build
     startCommand: node dist/main
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
         sync: false
       - key: JWT_SECRET
         sync: false
