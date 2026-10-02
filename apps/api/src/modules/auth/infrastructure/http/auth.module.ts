@@ -8,6 +8,7 @@ import { RolesGuard } from '../security/roles.guard';
 
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
 import { LoginUseCase } from '../../application/use-cases/login.use-case';
+import { OAuthLoginUseCase } from '../../application/use-cases/oauth-login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 
@@ -19,6 +20,8 @@ import { JwtTokenGenerator } from '../security/jwt-token-generator';
 
 import { JwtStrategy } from '../security/jwt.strategy';
 import { RefreshTokenStrategy } from '../security/refresh-token.strategy';
+import { GoogleStrategy } from '../security/google.strategy';
+import { GitHubStrategy } from '../security/github.strategy';
 
 import { PrismaService } from '@/shared/database/prisma.service';
 
@@ -32,41 +35,40 @@ import {
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({ 
+    JwtModule.register({
       secret: process.env.JWT_SECRET || 'super-secret',
-      signOptions: { expiresIn: '1h' }
-    })
+      signOptions: { expiresIn: '1h' },
+    }),
   ],
   controllers: [AuthController],
   providers: [
     JwtStrategy,
     RefreshTokenStrategy,
+    GoogleStrategy,
+    GitHubStrategy,
     PrismaService,
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+
     // Repositories
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
-    {
-      provide: REFRESH_TOKEN_REPOSITORY,
-      useClass: PrismaRefreshTokenRepository,
-    },
+    { provide: REFRESH_TOKEN_REPOSITORY, useClass: PrismaRefreshTokenRepository },
 
     // Services
     { provide: PASSWORD_HASHER, useClass: BcryptPasswordHasher },
     {
       provide: TOKEN_GENERATOR,
-      useFactory: (jwtService: JwtService) => {
-        return new JwtTokenGenerator(jwtService);
-      },
+      useFactory: (jwtService: JwtService) => new JwtTokenGenerator(jwtService),
       inject: [JwtService],
     },
 
     // Use cases
     {
       provide: RegisterUserUseCase,
-      useFactory: (repo, hasher, tokenGen, prisma) => new RegisterUserUseCase(repo, hasher, tokenGen, prisma),
+      useFactory: (repo, hasher, tokenGen, prisma) =>
+        new RegisterUserUseCase(repo, hasher, tokenGen, prisma),
       inject: [USER_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR, PrismaService],
     },
     {
@@ -74,6 +76,11 @@ import {
       useFactory: (repo, hasher, tokenGen) =>
         new LoginUseCase(repo, hasher, tokenGen),
       inject: [USER_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR],
+    },
+    {
+      provide: OAuthLoginUseCase,
+      useFactory: (prisma, tokenGen) => new OAuthLoginUseCase(prisma, tokenGen),
+      inject: [PrismaService, TOKEN_GENERATOR],
     },
     {
       provide: RefreshTokenUseCase,
