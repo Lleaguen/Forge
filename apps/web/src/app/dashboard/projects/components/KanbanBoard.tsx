@@ -21,11 +21,11 @@ interface Props {
 }
 
 // Columnas por defecto como fallback
-const DEFAULT_COLUMNS = [
-  { id: 'TODO', title: 'TO DO', status: 'TODO', position: 0, projectId: '', isDefault: true },
-  { id: 'IN_PROGRESS', title: 'IN PROGRESS', status: 'IN_PROGRESS', position: 1, projectId: '', isDefault: true },
-  { id: 'IN_REVIEW', title: 'IN REVIEW', status: 'IN_REVIEW', position: 2, projectId: '', isDefault: true },
-  { id: 'DONE', title: 'DONE', status: 'DONE', position: 3, projectId: '', isDefault: true },
+const DEFAULT_COLUMNS: { id: string; title: string; status: TaskStatus; position: number; projectId: string; isDefault: boolean }[] = [
+  { id: 'TODO', title: 'TO DO', status: 'TODO' as TaskStatus, position: 0, projectId: '', isDefault: true },
+  { id: 'IN_PROGRESS', title: 'IN PROGRESS', status: 'IN_PROGRESS' as TaskStatus, position: 1, projectId: '', isDefault: true },
+  { id: 'IN_REVIEW', title: 'IN REVIEW', status: 'IN_REVIEW' as TaskStatus, position: 2, projectId: '', isDefault: true },
+  { id: 'DONE', title: 'DONE', status: 'DONE' as TaskStatus, position: 3, projectId: '', isDefault: true },
 ]
 
 export default function KanbanBoard({ 
