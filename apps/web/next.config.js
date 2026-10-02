@@ -6,10 +6,7 @@ const nextConfig = {
   assetPrefix: '/Forge',
   reactStrictMode: true,
   images: {
-    unoptimized: true, // Requerido para export estático
-  },
-  experimental: {
-    appDir: true,
+    unoptimized: true,
   },
 };
 

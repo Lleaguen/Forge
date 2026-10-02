@@ -9,13 +9,10 @@ export const CreateTaskFormSchema = z.object({
   description: z.string()
     .max(FORM_DEFAULTS.MAX_DESCRIPTION_LENGTH, 'Description too long')
     .optional(),
-  category: z.nativeEnum(TaskCategory)
-    .default(FORM_DEFAULTS.CATEGORY),
-  priority: z.nativeEnum(TaskPriority)
-    .default(FORM_DEFAULTS.PRIORITY),
+  category: z.nativeEnum(TaskCategory),
+  priority: z.nativeEnum(TaskPriority),
   tags: z.array(z.string())
-    .max(FORM_DEFAULTS.MAX_TAGS)
-    .default([]),
+    .max(FORM_DEFAULTS.MAX_TAGS),
   assigneeId: z.string().optional(),
 })
 
