@@ -22,7 +22,7 @@ export default function LoginPage() {
         children={
         <FormCard title="Welcome back" description="Sign in to your Forge workspace" form={form} footer="© 2024 Forge Web Inc. All rights reserved." onSubmit={onSubmit}>
           <FormField label="Email Address" error={errors.email?.message}>
-            <Input type="email" placeholder="john.doe@forge.com" hasError={!!errors.email} {...register('email')}/>
+            <Input type="email" placeholder="you@example.com" hasError={!!errors.email} {...register('email')}/>
           </FormField>
           <FormField label="Password" action={ <Button href="/#" variant="ghost">Forgot password?</Button> }
             error={errors.password?.message}>
