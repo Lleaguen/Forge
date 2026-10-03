@@ -22,8 +22,6 @@ export function useAuth() {
       try {
         return await getMe()
       } catch (err) {
-        // Solo limpiar token si es 401 (token inválido/expirado)
-        // No limpiar si es error de red (offline, servidor caído)
         const status = (err as AxiosError)?.response?.status
         if (status === 401 && typeof window !== 'undefined') {
           localStorage.removeItem(TOKEN_KEY)
