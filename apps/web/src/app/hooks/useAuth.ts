@@ -2,13 +2,13 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { login as loginApi, getMe } from '../api/auth.api'
+import { login as loginApi, getMe, logout as logoutApi } from '../api/auth.api'
 import { notificationService } from '../shared/services/notification.service'
 import { useErrorHandler } from '../shared/hooks/useErrorHandler'
 import type { User, LoginCredentials } from '../types/auth.types'
 import { TOKEN_KEY } from '../shared/api/axios'
+import { AxiosError } from 'axios'
 
-// Shared query key for the current user
 export const USER_QUERY_KEY = ['auth', 'me']
 
 export function useAuth() {
@@ -16,15 +16,16 @@ export function useAuth() {
   const queryClient = useQueryClient()
   const { handleError } = useErrorHandler()
 
-  // Use React Query to manage user state globally
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: USER_QUERY_KEY,
     queryFn: async () => {
       try {
         return await getMe()
-      } catch {
-        // Si falla getMe, limpiar el token inválido
-        if (typeof window !== 'undefined') {
+      } catch (err) {
+        // Solo limpiar token si es 401 (token inválido/expirado)
+        // No limpiar si es error de red (offline, servidor caído)
+        const status = (err as AxiosError)?.response?.status
+        if (status === 401 && typeof window !== 'undefined') {
           localStorage.removeItem(TOKEN_KEY)
         }
         return null
@@ -32,23 +33,12 @@ export function useAuth() {
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
-    // Si ya hay token en localStorage, asumir autenticado mientras carga
-    initialData: () => {
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem(TOKEN_KEY)
-        // Retornar undefined para que ejecute queryFn, pero no null (null = no autenticado)
-        return token ? undefined : undefined
-      }
-      return undefined
-    },
   })
 
-  // Login mutation
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => loginApi(credentials),
     onSuccess: (data) => {
       if (data.user) {
-        // Guardar token en localStorage para mobile (cross-domain cookies bloqueadas)
         if (typeof window !== 'undefined' && data.accessToken) {
           localStorage.setItem(TOKEN_KEY, data.accessToken)
         }
@@ -64,16 +54,13 @@ export function useAuth() {
     }
   })
 
-  // Logout
   const logoutMutation = useMutation({
     mutationFn: async () => {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(TOKEN_KEY)
       }
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      })
+      // Llamar al backend para limpiar la cookie (best-effort)
+      try { await logoutApi() } catch {}
       queryClient.setQueryData(USER_QUERY_KEY, null)
       queryClient.clear()
     },
@@ -83,22 +70,13 @@ export function useAuth() {
     },
   })
 
-  const logout = () => {
-    logoutMutation.mutate()
-  }
-
-  // Helper to refresh user data (used after avatar/profile updates)
-  const refreshUser = () => {
-    queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY })
-  }
-
   return {
     user: user || undefined,
     isLoading,
     isAuthenticated: !!user,
     login: loginMutation.mutate,
-    logout,
-    refreshUser,
+    logout: () => logoutMutation.mutate(),
+    refreshUser: () => queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY }),
     isLoggingIn: loginMutation.isPending,
     isLoggingOut: logoutMutation.isPending,
   }

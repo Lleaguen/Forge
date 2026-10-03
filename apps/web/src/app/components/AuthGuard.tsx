@@ -2,7 +2,7 @@
 
 import { useAuth } from '../hooks/useAuth'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TOKEN_KEY } from '../shared/api/axios'
 
 interface AuthGuardProps {
@@ -10,37 +10,52 @@ interface AuthGuardProps {
   requireAuth?: boolean
 }
 
+function getLocalToken(): string | null {
+  try {
+    return typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
+  } catch {
+    return null
+  }
+}
+
 export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const hasRedirected = useRef(false)
+  const [localToken, setLocalToken] = useState<string | null>(null)
+  const [tokenChecked, setTokenChecked] = useState(false)
 
-  // Verificar si hay token en localStorage (para mobile cross-domain)
-  const hasLocalToken = typeof window !== 'undefined'
-    ? !!localStorage.getItem(TOKEN_KEY)
-    : false
+  // Leer localStorage solo en el cliente (evita hydration mismatch en Safari)
+  useEffect(() => {
+    setLocalToken(getLocalToken())
+    setTokenChecked(true)
+  }, [])
 
   useEffect(() => {
+    if (!tokenChecked) return
     if (!isLoading && !hasRedirected.current) {
-      if (requireAuth && !user && !hasLocalToken && pathname !== '/login') {
+      const isAuthed = !!user || !!localToken
+      if (requireAuth && !isAuthed && pathname !== '/login') {
         hasRedirected.current = true
         router.replace('/login')
-      } else if (!requireAuth && user && (pathname === '/login' || pathname === '/register')) {
+      } else if (!requireAuth && !!user && (pathname === '/login' || pathname === '/register')) {
         hasRedirected.current = true
         router.replace('/dashboard')
       }
     }
-  }, [user, isLoading, requireAuth, router, pathname, hasLocalToken])
+  }, [user, isLoading, requireAuth, router, pathname, localToken, tokenChecked])
 
   useEffect(() => {
     hasRedirected.current = false
+    setLocalToken(getLocalToken())
   }, [user])
 
-  if (isLoading) {
+  // Mostrar spinner mientras carga auth o mientras verificamos localStorage
+  if (isLoading || !tokenChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-primary border-t-transparent"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-primary border-t-transparent" />
       </div>
     )
   }
@@ -49,8 +64,7 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
     return <>{children}</>
   }
 
-  // Permitir acceso si hay user en cache O si hay token en localStorage (mobile)
-  if (requireAuth && !user && !hasLocalToken) {
+  if (requireAuth && !user && !localToken) {
     return null
   }
 
