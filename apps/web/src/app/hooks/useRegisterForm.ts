@@ -7,6 +7,7 @@ import { RegisterSchema } from '../schemas/auth.schema'
 import { register as registerApi } from '../api/auth.api'
 import { notificationService } from '../shared/services/notification.service'
 import { useErrorHandler } from '../shared/hooks/useErrorHandler'
+import { TOKEN_KEY } from '../shared/api/axios'
 
 export type RegisterFormValues = z.infer<typeof RegisterSchema>
 
@@ -16,11 +17,13 @@ export function useRegisterForm() {
 
   const mutation = useMutation({
     mutationFn: (values: RegisterFormValues) => {
-      // Strip confirm fields before sending to API
       const { confirmPassword, confirmEmail, ...payload } = values
       return registerApi(payload)
     },
     onSuccess: (data) => {
+      if (typeof window !== 'undefined' && data.accessToken) {
+        localStorage.setItem(TOKEN_KEY, data.accessToken)
+      }
       notificationService.registerSuccess()
       setTimeout(() => {
         router.push('/dashboard')

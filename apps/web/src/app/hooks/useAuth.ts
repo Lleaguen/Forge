@@ -6,6 +6,7 @@ import { login as loginApi, getMe } from '../api/auth.api'
 import { notificationService } from '../shared/services/notification.service'
 import { useErrorHandler } from '../shared/hooks/useErrorHandler'
 import type { User, LoginCredentials } from '../types/auth.types'
+import { TOKEN_KEY } from '../shared/api/axios'
 
 // Shared query key for the current user
 export const USER_QUERY_KEY = ['auth', 'me']
@@ -34,7 +35,10 @@ export function useAuth() {
     mutationFn: (credentials: LoginCredentials) => loginApi(credentials),
     onSuccess: (data) => {
       if (data.user) {
-        // Update the user in the query cache immediately
+        // Guardar token en localStorage para mobile (cross-domain cookies bloqueadas)
+        if (typeof window !== 'undefined' && data.accessToken) {
+          localStorage.setItem(TOKEN_KEY, data.accessToken)
+        }
         queryClient.setQueryData(USER_QUERY_KEY, data.user)
         notificationService.loginSuccess(data.user.fullName || data.user.email)
         setTimeout(() => {
@@ -50,6 +54,9 @@ export function useAuth() {
   // Logout
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(TOKEN_KEY)
+      }
       await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
