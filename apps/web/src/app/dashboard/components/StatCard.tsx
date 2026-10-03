@@ -7,13 +7,14 @@ type Props = {
 export default function StatCard({ title, value, colSpan = 3 }: Props) {
   return (
     <div
-      className={`col-span-${colSpan} rounded-2xl border border-slate-200 bg-white p-6
-      dark:border-white/10 dark:bg-brand-surface`}
+      className={`col-span-${colSpan} rounded-2xl border border-brand-light-border bg-brand-light-surface p-6
+      shadow-sm shadow-brand-light-accentSoft
+      dark:border-white/10 dark:bg-brand-surface dark:shadow-none`}
     >
-      <p className="text-sm text-slate-500 dark:text-brand-textMuted">
+      <p className="text-sm text-brand-light-muted dark:text-brand-Muted">
         {title}
       </p>
-      <p className="mt-2 text-3xl font-bold text-slate-800 dark:text-brand-text">
+      <p className="mt-2 text-3xl font-bold text-brand-light-accent dark:text-brand-primary">
         {value}
       </p>
     </div>
