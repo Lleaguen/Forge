@@ -49,11 +49,11 @@ export default function Siderbar() {
       {/* ── Desktop sidebar ───────────────────────────── */}
       <aside className="
         hidden md:flex h-full w-56 flex-col flex-shrink-0
-        border-r border-brand-light-border bg-brand-light-surface
-        shadow-[1px_0_12px_rgba(255,122,26,0.06)]
+        border-r border-brand-light-border
+        bg-[#FFFFFF] dark:bg-brand-bg
+        shadow-[1px_0_12px_rgba(255,122,26,0.06)] dark:shadow-none
         dark:border-white/10
-        dark:bg-gradient-to-r dark:from-brand-primary/15 dark:to-transparent
-        dark:backdrop-blur-xl
+        dark:bg-gradient-to-b dark:from-brand-primary/10 dark:to-brand-bg
       ">
         {sidebarContent}
       </aside>
@@ -83,9 +83,10 @@ export default function Siderbar() {
       {/* ── Mobile: drawer ────────────────────────────── */}
       <aside className={`
         md:hidden fixed inset-y-0 left-0 z-50 w-64 flex flex-col
-        border-r border-brand-light-border bg-brand-light-surface
-        shadow-xl
-        dark:border-white/10 dark:bg-brand-bg
+        border-r border-brand-light-border
+        bg-white dark:bg-brand-bg
+        shadow-xl dark:shadow-brand-primary/10
+        dark:border-white/10
         transition-transform duration-300
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
