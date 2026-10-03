@@ -14,20 +14,18 @@ export default function DashboardLayout({
   return (
     <AuthGuard requireAuth={true}>
       <div className="flex h-screen overflow-hidden bg-brand-light-bg dark:bg-gradient-to-b dark:from-brand-bg dark:to-brand-surface">
-        {/* Sidebar fijo */}
-        <aside className="flex-shrink-0">
-          <AsideLayout />
-        </aside>
 
-        {/* Columna derecha: header + contenido + footer */}
-        <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Sidebar — fijo, oculto en mobile (se muestra como drawer) */}
+        <AsideLayout />
+
+        {/* Columna derecha */}
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+
           {/* Header fijo */}
-          <div className="flex-shrink-0">
-            <HeaderLayout />
-          </div>
+          <HeaderLayout />
 
           {/* Contenido scrolleable */}
-          <main className="flex-1 overflow-y-auto px-12 py-10">
+          <main className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-8">
             <Breadcrumb />
             {children}
           </main>
