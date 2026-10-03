@@ -3,6 +3,7 @@
 import { useAuth } from '../hooks/useAuth'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
+import { TOKEN_KEY } from '../shared/api/axios'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -15,26 +16,27 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
   const pathname = usePathname()
   const hasRedirected = useRef(false)
 
+  // Verificar si hay token en localStorage (para mobile cross-domain)
+  const hasLocalToken = typeof window !== 'undefined'
+    ? !!localStorage.getItem(TOKEN_KEY)
+    : false
+
   useEffect(() => {
     if (!isLoading && !hasRedirected.current) {
-      if (requireAuth && !user && pathname !== '/login') {
-        // Only redirect to login if not already on login page
+      if (requireAuth && !user && !hasLocalToken && pathname !== '/login') {
         hasRedirected.current = true
         router.replace('/login')
       } else if (!requireAuth && user && (pathname === '/login' || pathname === '/register')) {
-        // Only redirect to dashboard if on auth pages
         hasRedirected.current = true
         router.replace('/dashboard')
       }
     }
-  }, [user, isLoading, requireAuth, router, pathname])
+  }, [user, isLoading, requireAuth, router, pathname, hasLocalToken])
 
-  // Reset redirect flag when user state changes
   useEffect(() => {
     hasRedirected.current = false
   }, [user])
 
-  // Show loading while checking authentication
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -43,13 +45,12 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
     )
   }
 
-  // Always render children for login/register pages to allow form submission
   if (!requireAuth) {
     return <>{children}</>
   }
 
-  // Don't render children if auth is required but user is not authenticated
-  if (requireAuth && !user) {
+  // Permitir acceso si hay user en cache O si hay token en localStorage (mobile)
+  if (requireAuth && !user && !hasLocalToken) {
     return null
   }
 

@@ -23,11 +23,24 @@ export function useAuth() {
       try {
         return await getMe()
       } catch {
+        // Si falla getMe, limpiar el token inválido
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(TOKEN_KEY)
+        }
         return null
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: false,
+    // Si ya hay token en localStorage, asumir autenticado mientras carga
+    initialData: () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem(TOKEN_KEY)
+        // Retornar undefined para que ejecute queryFn, pero no null (null = no autenticado)
+        return token ? undefined : undefined
+      }
+      return undefined
+    },
   })
 
   // Login mutation
