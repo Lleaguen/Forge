@@ -51,7 +51,7 @@ export default function Siderbar() {
         hidden md:flex h-full w-56 flex-col flex-shrink-0
         border-r border-brand-light-border
         bg-[#FFFFFF] dark:bg-brand-bg
-        shadow-[1px_0_12px_rgba(255,122,26,0.06)] dark:shadow-none
+        shadow-[1px_0_12px_rgba(255,122,26,0.08)]
         dark:border-white/10
         dark:bg-gradient-to-b dark:from-brand-primary/10 dark:to-brand-bg
       ">
