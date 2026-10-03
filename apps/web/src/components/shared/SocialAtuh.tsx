@@ -1,4 +1,5 @@
 'use client'
+import { Button } from '../shared/index'
 import { AiOutlineGoogle, AiOutlineGithub } from "react-icons/ai";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -23,20 +24,14 @@ export default function SocialAuth() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <button
-          onClick={handleGoogle}
-          className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-        >
+        <Button variant="outline" onClick={handleGoogle}>
           <AiOutlineGoogle size={18} />
           Google
-        </button>
-        <button
-          onClick={handleGitHub}
-          className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-        >
+        </Button>
+        <Button variant="outline" onClick={handleGitHub}>
           <AiOutlineGithub size={18} />
           GitHub
-        </button>
+        </Button>
       </div>
     </>
   );
