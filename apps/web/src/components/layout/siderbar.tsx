@@ -12,31 +12,32 @@ export default function Siderbar() {
   return (
     <aside
       className="
-        flex w-80 flex-col
-        border-r border-slate-100
-        bg-white/70
+        flex h-full w-72 flex-col
+        border-r border-brand-light-border bg-brand-light-surface
+        shadow-[1px_0_12px_rgba(255,122,26,0.08)]
         dark:border-white/10
-        dark:bg-gradient-to-r
-        dark:from-brand-primary/15
-        dark:to-transparent
-        dark:bg-slate-800/20
+        dark:bg-gradient-to-r dark:from-brand-primary/15 dark:to-transparent
         dark:backdrop-blur-xl
         dark:shadow-[inset_-1px_0_0_rgba(255,255,255,0.05)]
       "
     >
       <div className="flex flex-1 flex-col px-3 pt-4">
         <Logo />
-        <p className="mb-6 mt-10 px-4 text-[12px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+        <p className="mb-4 mt-10 px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-light-accent/60 dark:text-slate-500">
           Management
         </p>
         <Nav />
       </div>
-      <div className="mt-auto border-t border-slate-50 p-6 dark:border-none dark:text-brand-text">
+
+      {/* Separador con tono naranja en light */}
+      <div className="mx-4 h-px bg-brand-light-accentSoft dark:bg-white/5" />
+
+      <div className="p-5 dark:text-brand-text">
         <Button
           onClick={logout}
-          className="mb-10 flex w-full items-center gap-3 bg-transparent text-[15px] font-bold text-red-500 hover:bg-transparent hover:opacity-80"
+          className="mb-2 flex w-full items-center gap-3 bg-transparent text-[14px] font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
         >
-          <FiLogOut size={20} />
+          <FiLogOut size={18} />
           Sign Out
         </Button>
       </div>
