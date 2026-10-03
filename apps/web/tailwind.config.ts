@@ -11,30 +11,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        
         brand: {
-          //  primary: '#FF7A1A',
-           primaryLight: '#FFC233',
-          // primaryDark: 'rgba(227, 50, 50, 1)',
-          // dark: '#343434ff',
-          // surface: '#383838ff',
-          // border: '#464646ff',
-          // text: '#E5E7EB',
-          // bgbody: '#333333ff',
-          // muted: '#9CA3AF',
-             bg: '#0B1020',        // arriba
-    surface2: '#081b6fff',// inputs / layers
-             surface: '#121826',   // cards
-      border: 'rgba(255,255,255,0.06)',
-      text: '#E5E7EB',
-      Muted: '#9CA3AF',
-      primary: '#FF7A1A',
-      primaryHover: '#E66A14',
-      secondary: '#ffa15d73',
-      bgCard: '#12172B',
+          // ── Dark mode ──────────────────────────────
+          primaryLight: '#FFC233',
+          bg: '#0B1020',
+          surface2: '#081b6fff',
+          surface: '#121826',
+          border: 'rgba(255,255,255,0.06)',
+          text: '#E5E7EB',
+          Muted: '#9CA3AF',
+          primary: '#FF7A1A',
+          primaryHover: '#E66A14',
+          secondary: '#ffa15d73',
+          bgCard: '#12172B',
+
+          // ── Light mode ─────────────────────────────
+          light: {
+            bg: '#FFF7F0',           // fondo cálido casi blanco
+            surface: '#FFFFFF',      // cards
+            surface2: '#FFF1E6',     // inputs / capas
+            border: 'rgba(255,122,26,0.15)',
+            text: '#1A1A1A',
+            muted: '#7A6A5A',
+            accent: '#FF7A1A',       // naranja principal
+            accentHover: '#E66A14',
+            accentSoft: '#FFE0CC',   // naranja muy suave para fondos
+            accentMid: '#FFB380',    // naranja medio para bordes/badges
+          },
         }
       },
-     
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
       },

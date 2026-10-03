@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard requireAuth={true}>
-      <div className="flex min-h-screen bg-slate-50 dark:bg-gradient-to-b dark:from-brand-bg dark:to-brand-surface ">
+      <div className="flex min-h-screen bg-brand-light-bg dark:bg-gradient-to-b dark:from-brand-bg dark:to-brand-surface">
         <AsideLayout />
         <ThemeToggle/>
         <div className="flex flex-1 flex-col">

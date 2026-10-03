@@ -2,7 +2,7 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-*{
+* {
   padding: 0;
   margin: 0;
 }
@@ -15,17 +15,17 @@ html {
 
 * {
   transition:
-    background-color 500ms ease-in-out,
+    background-color 300ms ease-in-out,
     border-color 200ms ease,
     color 200ms ease,
     fill 200ms ease,
     stroke 200ms ease;
 }
 
+/* ── Light mode base ──────────────────────────────────── */
 @layer base {
   body {
-   
-    @apply bg-[#F8FAFC] text-slate-700;
+    @apply bg-brand-light-bg text-brand-light-text;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
@@ -33,15 +33,65 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-}
 
-@layer components {
-  .input-standard {
-    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm 
-           outline-none transition-all focus:border-[#2FA4A9] focus:ring-2 focus:ring-[#2FA4A9]/10;
+  /* Scrollbar naranja en light mode */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-brand-light-accentSoft;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-light-accentMid rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-light-accent;
   }
 
+  /* Scrollbar en dark mode */
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-brand-surface;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-brand-primary/40 rounded-full;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-primary;
+  }
+}
+
+/* ── Componentes reutilizables ────────────────────────── */
+@layer components {
+  /* Input — light */
+  .input-standard {
+    @apply w-full rounded-xl border border-brand-light-border bg-brand-light-surface2
+           px-4 py-3 text-sm text-brand-light-text placeholder-brand-light-muted
+           outline-none transition-all
+           focus:border-brand-light-accent focus:ring-2 focus:ring-brand-light-accent/20;
+  }
+  /* Input — dark */
+  .dark .input-standard {
+    @apply border-brand-border bg-brand-surface2 text-brand-text placeholder-brand-Muted
+           focus:border-brand-primary focus:ring-brand-primary/20;
+  }
+
+  /* Card — light */
   .card-container {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-2xl border border-brand-light-border bg-brand-light-surface shadow-sm
+           shadow-brand-light-accentSoft;
+  }
+  /* Card — dark */
+  .dark .card-container {
+    @apply border-brand-border bg-brand-bgCard shadow-none;
+  }
+
+  /* Badge naranja suave — light */
+  .badge-accent {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+           bg-brand-light-accentSoft text-brand-light-accent border border-brand-light-accentMid;
+  }
+  .dark .badge-accent {
+    @apply bg-brand-primary/15 text-brand-primary border-brand-primary/30;
   }
 }
